@@ -1,17 +1,21 @@
 import pytest
 import os
-from app import create_app,extensions,models
+from app import create_app, extensions, models
 from flask_security import (
     Security,
     SQLAlchemyUserDatastore,
     hash_password,
 )
+
+
 @pytest.fixture()
 def app():
     app = create_app()
-    app.config.update({
-        "TESTING": True,
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+        }
+    )
     app.config["WTF_CSRF_ENABLED"] = False
     # Our test emails/domain isn't necessarily valid
     app.config["SECURITY_EMAIL_VALIDATOR_ARGS"] = {"check_deliverability": False}
@@ -23,6 +27,7 @@ def app():
 
     # clean up / reset resources here
     os.remove("instance/test.db")
+
 
 @pytest.fixture()
 def client(app):

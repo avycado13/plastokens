@@ -15,6 +15,8 @@ dependencies = [
     "bleach>=6.2.0",
     "wtforms>=3.2.1",
     "flask-wtf>=1.2.2",
+    "flask-admin>=1.6.1",
+    "flask-debugtoolbar>=0.16.0",
 ]
 
 [dependency-groups]

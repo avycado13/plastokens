@@ -1,8 +1,7 @@
 from app.extensions import db
-from app import fsqla
-from flask_security import UserMixin, RoleMixin, WebAuthnMixin
+from flask_security.models import fsqla_v3 as fsqla
+from flask_security import UserMixin, RoleMixin, WebAuthnMixin, AsaList
 from datetime import datetime
-
 
 fsqla.FsModels.set_db_info(db)
 
@@ -16,8 +15,8 @@ roles_users = db.Table(
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    recipient_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.username"), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey("user.username"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
@@ -30,11 +29,16 @@ class Transaction(db.Model):
 
 
 class User(db.Model, UserMixin):
+    @db.declared_attr
+    def webauthn(cls):
+        return db.relationship("WebAuthn", back_populates="user", cascade="all, delete")
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255))
     active = db.Column(db.Boolean(), nullable=False)
     fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False)
+    fs_webauthn_user_handle = db.Column(db.String(64), unique=True, nullable=True)
     last_login_at = db.Column(db.DateTime())
     current_login_at = db.Column(db.DateTime())
     last_login_ip = db.Column(db.String(100))
@@ -53,3 +57,9 @@ class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     description = db.Column(db.String(255))
+    # permissions = db.Column(AsaList(db.UnicodeText), nullable=True)
+
+
+class WebAuthn(db.Model, fsqla.FsWebAuthnMixin):
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User", back_populates="webauthn")

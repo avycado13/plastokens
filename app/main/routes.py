@@ -1,5 +1,5 @@
 from app.main import bp
-from flask import render_template, redirect, flash, url_for
+from flask import render_template, redirect, flash, url_for, current_app
 from flask_security import login_required, current_user
 from app.main.forms import TransferForm
 
@@ -18,4 +18,5 @@ def index():
         username=current_user.username,
         balance=current_user.balance,
         form=form,
+        app_name=current_app.config["APP_NAME"],
     )

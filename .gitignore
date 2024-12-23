@@ -8,5 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
-# Linter and pytest cach
-/Users/avy/Code/plastokens/.ruff_cache
+# Linter and pytest cache
+.ruff_cache
+.mypy_cache
+.pytest_cache

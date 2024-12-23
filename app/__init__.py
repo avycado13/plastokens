@@ -1,33 +1,26 @@
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
-from flask import Flask, request, current_app, render_template_string
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_mail import Mail
+from flask import Flask
 from flask_security import (
-    Security,
     SQLAlchemyUserDatastore,
     hash_password,
 )
-from flask_security.models import fsqla_v3 as fsqla
 from config import Config
 from app import models, extensions
-
-
-migrate = Migrate()
-mail = Mail()
 
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    extensions.db.init_app(app)
-    migrate.init_app(app, extensions.db)
-    mail.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(extensions.db, models.User, models.Role)
-    security = Security(app, user_datastore)  # noqa: F841
+    extensions.db.init_app(app)
+    extensions.migrate.init_app(app, extensions.db)
+    extensions.mail.init_app(app)
+    extensions.admin.init_app(app)
+    extensions.security.init_app(app, user_datastore)
+    extensions.toolbar.init_app(app)
     app.config["REMEMBER_COOKIE_SAMESITE"] = "strict"
     app.config["SESSION_COOKIE_SAMESITE"] = "strict"
 
@@ -42,18 +35,32 @@ def create_app(config_class=Config):
 
     from app.main import bp as main_bp
 
+    # FlaskAdmin views
+    from app.admin import AdminView, TransactionView
+
+    # Admin views
+    extensions.admin.add_view(
+        AdminView(models.User, extensions.db.session)
+    )
+    extensions.admin.add_view(AdminView(models.Role, extensions.db.session)
+        )
+    extensions.admin.add_view(AdminView(models.Transaction, extensions.db.session))
+    # extensions.admin.add_view(
+    #     TransactionView(models.Transaction, extensions.db.session)
+    # )
     app.register_blueprint(main_bp)
     with app.app_context():
         if os.path.exists("instance/test.db"):
             os.remove("instance/test.db")
         # Create User to test with
         extensions.db.create_all()
-        if not security.datastore.find_user(email="test@me.com"):
-            security.datastore.create_user(
+        extensions.security.datastore.create_role(name="admin")
+        if not extensions.security.datastore.find_user(email="test@me.com"):
+            extensions.security.datastore.create_user(
                 email="test@me.com", password=hash_password("password"), balance=1000
             )
-        if not security.datastore.find_user(email="test@you.com"):
-            security.datastore.create_user(
+        if not extensions.security.datastore.find_user(email="test@you.com"):
+            extensions.security.datastore.create_user(
                 email="test@you.com", password=hash_password("password"), balance=1000
             )
         extensions.db.session.commit()

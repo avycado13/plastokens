@@ -50,3 +50,6 @@ class TransferForm(FlaskForm):
             )
             db.session.add(transaction)
             db.session.commit()
+
+
+# TODO make merchant transfer form

@@ -6,7 +6,8 @@
     <title>User Dashboard</title>
 </head>
 <body>
-    <h1>Welcome, {{ username }}!</h1>
+    <h1>{{app_name}}</h1>
+    <h2>Welcome, {{ username }}!</h2>
     <p>Your current balance is: {{ balance }}</p>
     <form action="" method="post">
         {{ form.hidden_tag() }}
@@ -27,7 +28,7 @@
         <p>{{ form.submit() }}</p>
         {% if not current_user.tf_primary_method %}
             <p>
-                <a href="{{ url_for('security.two_factor_setup ') }}">Setup 2FA <b>(Cannot Be Disabled once enabled)</b></a>
+                <a href="{{ url_for('security.two_factor_setup') }}">Setup 2FA <b>(Cannot Be Disabled once enabled)</b></a>
             </p>
         {% else %}
             <p>
