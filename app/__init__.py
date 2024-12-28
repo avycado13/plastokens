@@ -50,18 +50,14 @@ def create_app(config_class=Config):
     # )
     app.register_blueprint(main_bp)
     with app.app_context():
-        if os.path.exists("instance/test.db"):
-            os.remove("instance/test.db")
-        # Create User to test with
         extensions.db.create_all()
-        extensions.security.datastore.create_role(name="admin")
-        if not extensions.security.datastore.find_user(email="test@me.com"):
-            extensions.security.datastore.create_user(
-                email="test@me.com", password=hash_password("password"), balance=1000
+        admin_role = extensions.security.datastore.find_or_create_role(name="admin")
+        user_role = extensions.security.datastore.find_or_create_role(name="user")
+        test_user = extensions.security.datastore.find_user(email="test@me.com")
+        if not test_user:
+            test_user = extensions.security.datastore.create_user(
+                email="test@me.com",
+                password=hash_password("password"),
             )
-        if not extensions.security.datastore.find_user(email="test@you.com"):
-            extensions.security.datastore.create_user(
-                email="test@you.com", password=hash_password("password"), balance=1000
-            )
+        extensions.security.datastore.add_role_to_user(test_user, admin_role)
         extensions.db.session.commit()
-    return app

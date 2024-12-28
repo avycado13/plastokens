@@ -7,6 +7,7 @@ fsqla.FsModels.set_db_info(db)
 
 roles_users = db.Table(
     "roles_users",
+    db.Model.metadata,
     db.Column("user_id", db.Integer(), db.ForeignKey("user.id")),
     db.Column("role_id", db.Integer(), db.ForeignKey("role.id")),
     extend_existing=True,
@@ -27,6 +28,9 @@ class Transaction(db.Model):
         "User", foreign_keys=[recipient_id], backref="received_transactions"
     )
 
+class WebAuthn(db.Model, fsqla.FsWebAuthnMixin):
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User", back_populates="webauthn")
 
 class User(db.Model, UserMixin):
     @db.declared_attr
@@ -60,6 +64,3 @@ class Role(db.Model, RoleMixin):
     # permissions = db.Column(AsaList(db.UnicodeText), nullable=True)
 
 
-class WebAuthn(db.Model, fsqla.FsWebAuthnMixin):
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
-    user = db.relationship("User", back_populates="webauthn")
